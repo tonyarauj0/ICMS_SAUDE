@@ -91,10 +91,13 @@ dados <- dados %>%
          health1 = health1* ipca1220, health2 = health2* ipca1220) %>% 
   select(-c("pib_corrente", "pib_per_nom"))
 
+dados <- dados %>% select(-c("localizacao", "rede"))
+
 
 #11. Relatorios ----
 #Relatorio rapido sobre os dados
 dados %>% create_report(report_title = "Base dados Geral ICMS-SAUDE", output_dir = "manuscript",
-                        output_file = "base_dados_geral_icms-saude.html")
+                        output_file = "base_dados_geral_icms-saude.html",
+                        y = "tmi1")
 
 
