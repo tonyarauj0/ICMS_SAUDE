@@ -76,7 +76,25 @@ dados <- left_join(dados,
 
 save(dados, file = "processed-data/base_dados_geral.Rda")
 
-  #10. Relatorios ----
+
+#10. Deflacionar valores para dez/2020----
+load("raw-data/ipca_final.Rda")
+
+ipca_pfinal <- ipca_pfinal %>%
+  mutate(ano = as.character(ano)) %>%
+  select(ano, ipca1220)
+
+dados <- left_join(dados, ipca_pfinal) #juntando deflator e dados
+
+dados <- dados %>%
+  mutate(pib = pib_corrente* ipca1220, pib_per = pib_per_nom* ipca1220,
+         health1 = health1* ipca1220, health2 = health2* ipca1220) %>% 
+  select(-c("pib_corrente", "pib_per_nom"))
+
+
+#11. Relatorios ----
 #Relatorio rapido sobre os dados
 dados %>% create_report(report_title = "Base dados Geral ICMS-SAUDE", output_dir = "manuscript",
                         output_file = "base_dados_geral_icms-saude.html")
+
+
