@@ -1,0 +1,169 @@
+---
+title: "Descrição da Base de Dados ICMS-Saúde"
+author: 
+  - Tony Araujo
+  - Walacy Oliveira
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+    html_document:
+       highlight: textmate
+       theme: flatly
+       number_sections: yes
+       toc: yes
+       toc_float:
+         collapsed: yes
+         smooth_scroll: no
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+```
+
+```{r pacotes, results='hide', echo=FALSE}
+#Pacotes que serão utilizados 
+pacotes = c("tidyr","tidylog", "tidyverse", "janitor","DataExplorer", "flextable")
+
+lapply(pacotes, require, character.only = T)
+
+rm(pacotes, x)
+
+```
+
+```{r dados, results='hide', echo=FALSE}
+#importar dados 
+load("../processed-data/base_dados_geral.Rda")
+
+#organizar variaveis
+dados <- dados %>% 
+  relocate(id_municipio, id_municipio_6, sigla_uf, municipio, ano,
+           tmi1, tmi5, n_medicos_esf, health1, health2, n_medicos_cg,
+           n_consultas,
+           n_leitos_fem, n_leitos_mas, n_leitos_ped, n_leitos_ind,
+           pop_res, `pop_tot_res_c_abs_agua(g12a)`, `pop_tot_res_c_esgot_san(g12b)`, `pop_urb_col_rdo(co014)`, `tx_cob_col_rdo(in015)`, prop_esg_tratado, pib, pib_per)
+
+#definir variaveis de resultado e de controle
+v_res <- c("tmi1", "tmi5", "n_medicos_esf") #resultado
+identificadores <- c("id_municipio", "id_municipio_6", "sigla_uf", "municipio", "ano")
+nv_cont <- c(v_res, identificadores)
+v_cont <- names(dados)[!(names(dados) %in% nv_cont)] #controles
+
+
+```
+
+
+# Variáveis de Resultado
+
+
+
+```{r variaveis_resultado}
+data.frame(
+  Variáveis = v_res, Descriçao = c("Taxa de Mortalidade Infantil para menores de 1 ano", "Taxa de Mortalidade Infantil para menores de 5 anos", "Médicos da Estratégia Saéde da Família"), Período = c("1996-2019", "1996-2019", "2005-2020"), Fonte = "DataSus") %>% 
+  flextable() %>% 
+  set_caption(caption = "Variáveis de Resultado")
+
+```
+
+# Variáveis de Controle
+
+```{r variaveis_controle}
+data.frame(Variáveis = v_cont, Descriçao = 
+             c("Gasto Municipal com Saúde, exceto saneamento a partir de 2002",
+               "Gasto Municipal com Saúde",
+               "Nº Médicos Clínicos Gerais",
+               "Nº  de Consultas, atendimentos e acompanhamentos",
+               "Nº Leitos Ambulatoriais Femininos",
+               "Nº Leitos Ambulatoriais Masculinos",
+               "Nº Leitos Ambulatoriais Pediátricos",
+               "Nº Leitos Ambulatoriais Indiferentes",
+               "População residente",
+               "População residente com abastecimento de água",
+               "População residente com esgotamento sanitário",
+               "População urbana atendida com serviço de coleta de RDO",
+               "Taxa de cobertura regular do serviço de coleta de rdo em relação à população total do município",
+               "Proporção de esgotos tratados",
+               "PIB",
+               "PIB per capita",
+               "Ideb instituições estaduais do ensino fundamental, anos finais",
+               "Ideb instituições estaduais do ensino fundamental, anos iniciais",
+               "Ideb instituições estaduais do ensino médio",
+               "Ideb instituições municipais do ensino fundamental, anos finais",
+               "Ideb instituições municipais do ensino fundamental, anos iniciais",
+               "Ideb instituições públicas do ensino fundamental, anos finais",
+               "Ideb instituições públicas do ensino fundamental, anos iniciais",
+               "Ideb instituições públicas do ensino médio",
+               "Ideb instituições federais do ensino médio",
+               "Ideb instituições federais do ensino fundamental, anos finais",
+               "Ideb instituições federais do ensino fundamental, anos iniciais",
+               "Ideb instituições municipais do ensino médio",
+               "Taxa de distorção idade-série ensino fundamental",
+               "Taxa de distorção idade-série ensino fundamental, anos iniciais",
+               "Taxa de distorção idade-série ensino fundamental, anos finais",
+               "Taxa de distorção idade-série ensino médio"),
+           Período = c(rep("2000-2019",2),
+                     "2005-2020",
+                     "2008-2020",
+                     rep("2005-2020", 4),
+                     "2001-2020",
+                     rep("1995-2020", 5),
+                     rep("2002-2018", 2),
+                     rep("2005-2019",12),
+                     rep("2006-2020",4)),
+           Fonte = c(rep("FINBRA/STN",2),
+                     rep("DataSus",6),
+                     "IBGE", rep("SNIS", 5),
+                     rep("IBGE", 2),
+                     rep("INEP",16 ))) %>%
+  flextable() %>%
+  set_caption(caption = "Variáveis de Controle")
+```
+O banco de dados advém de três fontes: ENEM, INEP e SEDUC-CE. É composto por escolas estaduais de ensino médio (Regular, Tempo Integral e Profissionalizante) do Ceará, entre os anos de 2013 [^1] e 2019 [^2].
+
+[^1]: Apesar do ENEM servir de porta de entrada antes de 2013, a escolha deste ano se deu por causa dos indicadores educacionais. A partir desse período todos os itens selecionados começaram divulgados continuamente.
+
+[^2]: Útimo ano que temos a nota do ENEM.
+
+Primeiramente, com os dados do ENEM, escolheram-se os alunos concludentes no ano de aplicação do exame. Logo após, selecionamos os alunos que estiveram presentes em todos os dias do mesmo. Como uma forma de filtrar alunos sem grandes distorções de idade, a amostra foi selecionada para alunos de 16 até 21 anos. Por fim, apenas as escolas em atividade, em cada ano, foram consideradas.
+
+O passo seguinte foi a elaboração do Indicador Socioeconômico [^3] através do questionário realizado pelo ENEM. Para construção do indicador, utilizou-se a mesma metodologia do INEP.
+
+[^3]: <http://portal.inep.gov.br/informacao-da-publicacao/-/asset_publisher/6JYIsGMAMkW1/document/id/6778106>
+
+O indicador que utiliza Teoria de Resposta do Item é ajustado para ter média 50 e desvio padrão 10. O INEP quando divulgava seu indicador construía um cluster para definir onde a escola se encaixaria, por escolha dos autores, não foi definido essa clusterização. Para exibição dos resultados, o indicador terá menor agrupamento ao nível escola.
+
+Ainda quanto aos dados do INEP, foram coletados alguns Indicadores Educaionais [^4]: Adequação de Formação Docente; Complexidade de Gestão Escolar; Esforço Docente; Média de alunos por Turma; Média de Horas-aula diária; Percentual de Docentes com Curso Superior e Regularidade do Corpo Docente
+
+[^4]: <https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/indicadores-educacionais>
+
+Por último, foram incorporadas as informações disponibilizadas pela SEDUC-CE: informações de qual Coordenadoria Regional de Desenvolvimento da Educação (CREDE) a escola pertence, geolocalização da escola, o tipo de escola (Tempo Integral, Profissionalizante, Militar, Regular e Outras), o nome da escola, e quando a mesma se tornou, caso isso tenha ocorrido, de tempo intgral.
+
+# Descritivas por municípios
+
+## Números de escolas e Tipo
+
+-   Evolução temporal
+
+## Números de alunos por Tipo de Escola
+
+-   Evolução temporal
+
+## Estatísticas dos indicadores INEP por tipo de Escola (quais indicadores?)
+
+-   Evolução temporal
+
+## Estatísticas dos indicadores ENEM por tipo de Escola (quais indicadores?)
+
+-   Evolução temporal
+
+## Mapa com percentual das escolas, por tipo. Período inicial e final(necessário?)
+
+# Descritivas por Escolas
+
+## Estatísticas dos indicadores INEP por tipo de Escola (quais indicadores?)
+
+-   Evolução temporal
+-   Box-Plot
+
+## Estatísticas dos indicadores ENEM por tipo de Escola (quais indicadores?)
+
+-   Evolução temporal
+-   Box-Plot
