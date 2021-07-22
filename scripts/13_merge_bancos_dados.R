@@ -89,10 +89,10 @@ dados <- left_join(dados, ipca_pfinal) #juntando deflator e dados
 dados <- dados %>%
   mutate(pib = pib_corrente* ipca1220, pib_per = pib_per_nom* ipca1220,
          health1 = health1* ipca1220, health2 = health2* ipca1220) %>% 
-  select(-c("pib_corrente", "pib_per_nom"))
+  select(-c("pib_corrente", "pib_per_nom", "ipca1220",
+            "localizacao", "rede"))
 
-dados <- dados %>% select(-c("localizacao", "rede"))
-
+save(dados, file = "processed-data/base_dados_geral.Rda")
 
 #11. Relatorios ----
 #Relatorio rapido sobre os dados
