@@ -92,6 +92,10 @@ dados <- dados %>%
   select(-c("pib_corrente", "pib_per_nom", "ipca1220",
             "localizacao", "rede"))
 
+# 12. Consultas ----
+load("processed-data/consultas_municipios(2008-2020).Rda")
+dados <- left_join(dados,consultas )
+
 save(dados, file = "processed-data/base_dados_geral.Rda")
 
 #11. Relatorios ----
