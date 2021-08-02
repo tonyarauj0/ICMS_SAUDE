@@ -18,32 +18,24 @@ output:
        toc_float:
          collapsed: yes
          smooth_scroll: no
+knit: pagedown::chrome_print
 params:
-  ano:
-    label: "Anos"
-    value: "2010"
-    input: select
-    choices: [!r as.character(seq(2000:2019, 1))]
-  tratado:
+  ano_lei:
+    label: "Ano que a Lei foi implementada"
+    value: "2007"
+    input: slider
+    min: 2000
+    max: 2019
+  uf_tratado:
     label: "Estado tratado"
     value: "CE"
     input: select
-    choices: r! unique(dados$sigla_uf)
-  controles:
-    label: "Estados controles"
-    value: r! c("MA", "PI", "RN", "PB", "AL", "SE", "BA")
-    input: select
-    choices: !r unique(dados$sigla_uf)
+    choices: [AP, CE, PE, MG, ES, RS, MT]
   var_r:
     label: "Variável de Resultado"
     value: tmi1
     input: select
     choices: [tmi1, tmi5, n_medicos_esf]
-  var_c:
-    label: "Variáveis de Controle"
-    value: health2
-    input: select
-    choices: [health1, health2, n_medicos_cg, n_consultas, n_leitos_fem, n_leitos_mas, n_leitos_ped, n_leitos_ind, pop_res, pop_tot_res_c_abs_agua(g12a), pop_tot_res_c_esgot_san(g12b), pop_urb_col_rdo(co014), tx_cob_col_rdo(in015), prop_esg_tratado, pib, pib_per, ideb_estadual_fundamental_finais (6-9), ideb_estadual_fundamental_iniciais (1-5), ideb_estadual_medio_todos (1-4), ideb_municipal_fundamental_finais (6-9), ideb_municipal_fundamental_iniciais (1-5), ideb_publica_fundamental_finais (6-9), ideb_publica_fundamental_iniciais (1-5),ideb_publica_medio_todos (1-4), ideb_federal_medio_todos (1-4), ideb_federal_fundamental_finais (6-9), ideb_federal_fundamental_iniciais (1-5), ideb_municipal_medio_todos (1-4), tdi_ensino_fund, tdi_ensino_fund_anos_iniciais, tdi_ensino_fund_anos_finais,tdi_ensino_medio]
 
 ---
 

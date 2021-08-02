@@ -1,0 +1,104 @@
+---
+title: "Análise do efeito da mudança na cota-parte do ICMS na Saúde"
+author: 
+  - Tony Araujo
+  - Walacy Oliveira
+  - Brysa
+  - Diego Carneiro
+  - Felipe
+  - Guilherme Irffi
+  - Pedro Veloso
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+    html_document:
+       highlight: textmate
+       theme: flatly
+       number_sections: yes
+       toc: yes
+       toc_float:
+         collapsed: yes
+         smooth_scroll: no
+#knit: pagedown::chrome_print
+params:
+  ano_lei:
+    label: "Ano que a Lei foi implementada"
+    value: "2007"
+    input: slider
+    min: 2000
+    max: 2019
+  uf_tratado:
+    label: "Estado tratado"
+    value: "Ceará"
+    input: select
+    choices: [Amapá, Ceará, Pernambuco, Minas Gerais, Espírito Santo, Rio Grande do Sul, Mato Grosso]
+  var_r:
+    label: "Variável de Resultado"
+    value: Taxa de Mortalidade Infantil até 1 ano
+    input: select
+    choices: [Taxa de Mortalidade Infantil até 1 ano, Taxa de Mortalidade Infantil até 5 anos, Número de Médicos da Estratégia Saúde da Família]
+
+---
+**Estado analisado:** `r params$uf_tratado`
+
+**Ano Internvenção:** `r params$ano_lei`
+
+**Varíavel de resultado:** `r params$var_r`
+
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+```
+
+```{r pacotes, results='hide', echo=FALSE}
+#Pacotes que serão utilizados 
+pacotes = c("tidyr","tidylog", "tidyverse", "janitor","DataExplorer", "flextable", "broom", "scales")
+
+lapply(pacotes, require, character.only = T)
+
+rm(pacotes, x)
+
+```
+
+```{r dados, results='hide', echo=FALSE}
+#importar dados 
+load("../processed-data/base_dados_geral.Rda")
+dados <- dados %>% mutate(id_municipio = as.numeric(id_municipio)) #modificar variavel id municipio para numerica
+
+```
+
+
+```{r gerar_regiao}
+dados <- dados %>% 
+  mutate( regiao = case_when( between( id_municipio_6, 100000, 199999) ~ "N",
+                            between( id_municipio_6, 200000, 299999) ~ "NE",
+                            between( id_municipio_6, 300000, 399999) ~ "SE",
+                            between( id_municipio_6, 400000, 499999) ~ "S",
+                            between( id_municipio_6, 500000, 599999) ~ "CO"))
+
+```
+
+
+```{r menus_tratados_controles}
+#Filtrar municipios de acordo com o tratado
+
+base_analise <- dados %>% 
+  filter(ifelse(params$uf_tratado == "Amapá"), between( id_municipio_6, 110000, 199999),
+         ifelse(which(params$uf_tratado == "Ceará" |params$uf_tratado == "Pernambuco")), between( id_municipio_6, 210000, 299999), ano == 2020)
+
+     
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

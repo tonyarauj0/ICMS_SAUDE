@@ -96,12 +96,32 @@ dados <- dados %>%
 load("processed-data/consultas_municipios(2008-2020).Rda")
 dados <- left_join(dados,consultas )
 
+
+#13. Populacao ----
+load("raw-data/Pop_municipal_residente_01-20.Rda")
+pop <- pop %>%
+  clean_names() %>% 
+  select(ano, municipio_codigo, valor) %>% 
+  rename(id_municipio = municipio_codigo, pop_res = valor)
+dados <- left_join(dados %>% select(-pop_res),pop )
 save(dados, file = "processed-data/base_dados_geral.Rda")
 
-#11. Relatorios ----
+#Relatorios ----
 #Relatorio rapido sobre os dados
+configurations <-configure_report(
+  add_plot_histogram = T, #excluding some plots
+  add_plot_str = F,
+  add_plot_qq = F,
+  add_plot_correlation = T,
+  add_plot_prcomp= F,
+  add_plot_boxplot = T,
+  global_ggtheme = theme_minimal() #setting theme
+) 
+
+
 dados %>% create_report(report_title = "Base dados Geral ICMS-SAUDE", output_dir = "manuscript",
                         output_file = "base_dados_geral_icms-saude.html",
-                        y = "tmi1")
+                        config = configurations
+                        )
 
 
