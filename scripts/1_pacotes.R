@@ -1,6 +1,7 @@
 #Pacotes
 pacotes = c("tidyr","tidylog", "tidyverse", "janitor","haven", "dbplyr",
-            "usethis", "lubridate", "basedosdados", "sidrar","readxl","DataExplorer" )
+            "usethis", "lubridate", "basedosdados", "sidrar","readxl","DataExplorer",
+            "flextable", "psych", "scales", "kableExtra")
 
 for (x in pacotes) {
   if(!x %in% installed.packages()) {

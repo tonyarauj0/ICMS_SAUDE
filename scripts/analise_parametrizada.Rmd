@@ -82,8 +82,13 @@ dados <- dados %>%
 #Filtrar municipios de acordo com o tratado
 
 base_analise <- dados %>% 
-  filter(ifelse(params$uf_tratado == "Amapá"), between( id_municipio_6, 110000, 199999),
-         ifelse(which(params$uf_tratado == "Ceará" |params$uf_tratado == "Pernambuco")), between( id_municipio_6, 210000, 299999), ano == 2020)
+    filter(case_when( params$uf_tratado == "Amapá" ~ regiao == "N",
+                           params$uf_tratado == "Ceará" | 
+                           params$uf_tratado == "Pernambuco"  ~ regiao == "NE",
+                           params$uf_tratado == "Minas Gerais" |
+                           params$uf_tratado == "Espírito Santo" ~ regiao == "SE",
+                           params$uf_tratado == "Rio Grande do Sul" ~ regiao == "S",
+                           params$uf_tratado == "Mato Groso"  ~ regiao == "CO"))
 
      
 
