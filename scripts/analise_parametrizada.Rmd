@@ -24,25 +24,23 @@ params:
     label: "Ano que a Lei foi implementada"
     value: "2007"
     input: slider
-    min: 2000
+    min: 1996
     max: 2019
+    step: 1
+    sep: ""
   uf_tratado:
     label: "Estado tratado"
-    value: "Ceará"
+    value: "CE"
     input: select
-    choices: [Amapá, Ceará, Pernambuco, Minas Gerais, Espírito Santo, Rio Grande do Sul, Mato Grosso]
-  var_r:
-    label: "Variável de Resultado"
-    value: Taxa de Mortalidade Infantil até 1 ano
-    input: select
-    choices: [Taxa de Mortalidade Infantil até 1 ano, Taxa de Mortalidade Infantil até 5 anos, Número de Médicos da Estratégia Saúde da Família]
+    choices: [AP, CE, MG, ES, RS, MT]
+
 
 ---
 **Estado analisado:** `r params$uf_tratado`
 
 **Ano Internvenção:** `r params$ano_lei`
 
-**Varíavel de resultado:** `r params$var_r`
+**Varíavel de resultado:** 
 
 
 ```{r setup, include=FALSE, echo=FALSE}
@@ -51,7 +49,8 @@ knitr::opts_chunk$set(echo = F, message = F, warning = F)
 
 ```{r pacotes, results='hide', echo=FALSE}
 #Pacotes que serão utilizados 
-pacotes = c("tidyr","tidylog", "tidyverse", "janitor","DataExplorer", "flextable", "broom", "scales")
+pacotes = c("tidyr","tidylog", "tidyverse", "janitor","DataExplorer", "flextable", "psych", "scales",
+            "kableExtra")
 
 lapply(pacotes, require, character.only = T)
 
@@ -67,7 +66,7 @@ dados <- dados %>% mutate(id_municipio = as.numeric(id_municipio)) #modificar va
 ```
 
 
-```{r gerar_regiao}
+```{r gerar_regiao, results='hide'}
 dados <- dados %>% 
   mutate( regiao = case_when( between( id_municipio_6, 100000, 199999) ~ "N",
                             between( id_municipio_6, 200000, 299999) ~ "NE",
@@ -78,24 +77,91 @@ dados <- dados %>%
 ```
 
 
-```{r menus_tratados_controles}
+```{r menus_tratados_controles, results='hide'}
 #Filtrar municipios de acordo com o tratado
 
 base_analise <- dados %>% 
-    filter(case_when( params$uf_tratado == "Amapá" ~ regiao == "N",
-                           params$uf_tratado == "Ceará" | 
-                           params$uf_tratado == "Pernambuco"  ~ regiao == "NE",
-                           params$uf_tratado == "Minas Gerais" |
-                           params$uf_tratado == "Espírito Santo" ~ regiao == "SE",
-                           params$uf_tratado == "Rio Grande do Sul" ~ regiao == "S",
-                           params$uf_tratado == "Mato Groso"  ~ regiao == "CO"))
+    filter(case_when( params$uf_tratado == "AP" ~ regiao == "N",
+                           params$uf_tratado == "CE" | 
+                           params$uf_tratado == "PE"  ~ regiao == "NE",
+                           params$uf_tratado == "MG" |
+                           params$uf_tratado == "ES" ~ regiao == "SE",
+                           params$uf_tratado == "RS" ~ regiao == "S",
+                           params$uf_tratado == "MT"  ~ regiao == "CO"))
 
-     
+```
+
+```{r menu_dif_dif, results='hide'}
+base_analise <- base_analise %>% 
+  mutate(tratado = case_when(sigla_uf == params$uf_tratado ~ 1, TRUE ~ 0), #tratado é 1 e demais são zero.
+         ano_tratamento = case_when(between (ano, params$ano_lei, 2019) ~ 1, #após ano implementação é periodo de tratamento, caso contrario é zero
+                                    TRUE ~ 0))
+```
+
+```{r excecoes, results='hide'}
+ifelse(params$uf_tratado == "CE", #se tratado for CE
+       base_analise <- base_analise %>% 
+         filter(sigla_uf != "PE"), #excluir PE
+       ifelse(params$uf_tratado == "MG", #se tratado for MG
+              base_analise <- base_analise %>% 
+                filter(sigla_uf != "ES"), #excluir ES
+              ifelse(params$uf_tratado == "ES", #se tratado for ES
+                     base_analise <- base_analise %>% 
+                       filter(sigla_uf != "MG"), #escluir MG
+                     base_analise
+              )))
+
+
 
 
 ```
 
 
+```{r parametros, results='hide'}
+#Numero de medicos por 1000 habitantes
+base_analise <- base_analise %>% 
+  mutate(medicos_1k_hab_esf = (n_medicos_esf/pop_res)*1000)
+
+#Gasto em saúde e saneamento, deflacionado,  percapita.
+base_analise <- base_analise %>% 
+  mutate(gasto_saude_per = health2 / pop_res)
+
+
+# variaveis de resposta da politica
+var_r = c("tmi1", "tmi5", "medicos_1k_hab_esf" )
+
+```
+
+
+
+# Pré análise usando dados não pareados
+
+## Diferença nas médias: Variável de resultado
+
+```{r, echo=FALSE}
+
+base_analise %>%
+  group_by(tratado) %>%
+  summarise(
+    across(
+      var_r,
+      .fns = list(
+        "N.Obs" = ~ n(),
+        "Média" = ~ mean(.x, na.rm = T),
+        "Mediana" = ~ median(.x, na.rm = T),
+        "Mín" = ~ min(.x, na.rm = T),
+        "Máx" = ~ max(.x, na.rm = T),
+        "Desvio-Padrão" = ~ sd(.x, na.rm = T)
+      ),
+      #.names = "{.fn}"
+    ),
+    .groups = "drop"
+  ) %>% 
+  kable(digits = 3, booktabs = T) %>% 
+  add_header_above(c("Grupo" = 1, "TMI 1" = 6, "TMI 5" = 6, "Médicos ESF por mil hab. " = 6))
+  
+
+```
 
 
 
